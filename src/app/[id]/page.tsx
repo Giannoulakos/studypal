@@ -16,15 +16,23 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
+import {
+  Accordion,
+  AccordionContent,
+  AccordionItem,
+  AccordionTrigger,
+} from '@/components/ui/accordion';
 
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { Document, Page } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import { pdfjs } from 'react-pdf';
 import Keyboard from '@/components/ui/mathkeyboard/keyboard';
-import { Button } from '@/components/ui/button';
+import { createClient } from '../../../utils/supabase/client';
+import { Assistant } from '@/components/ui/assistant/assistant';
 
+// Error comes from pdfjs. When you find time fix it.
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
   'pdfjs-dist/build/pdf.worker.min.mjs',
   import.meta.url
@@ -38,6 +46,8 @@ export default function StudyPage() {
 
   const [text, setText] = useState<string>('');
 
+  const supabase = createClient();
+
   function onDocumentLoadSuccess({ numPages }: { numPages: number }): void {
     let tmpArr: number[] = [];
     for (let i = 1; i <= numPages; i++) {
@@ -47,11 +57,41 @@ export default function StudyPage() {
     setPageNumber(1);
   }
 
+  const handleFileUpload = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    console.log(doc);
+    if (doc === null || !user) return;
+    try {
+      const { data, error } = await supabase.storage
+        .from('PDFS')
+        .upload(user.id + '/' + doc.name, doc, {
+          upsert: false,
+        });
+      if (error) {
+        throw error;
+      }
+    } catch (error) {
+      console.log(error);
+      alert('Error uploading file');
+    }
+  };
+
+  useEffect(() => {
+    handleFileUpload();
+  }, [doc]);
+
   return (
     <main className='flex h-full min-h-screen'>
       <div className=' min-w-[15vw] min-h-screen basis-1/2 bg-[white] p-10 '>
         <div className='mb-10'>
-          <InputFile onData={(file) => setDoc(file)} />
+          <InputFile
+            onData={async (file) => {
+              setDoc(file);
+              console.log(file);
+            }}
+          />
         </div>
         <Pagination>
           <PaginationContent>
@@ -99,18 +139,30 @@ export default function StudyPage() {
           </div>
         )}
       </div>
-      <div className='flex justify-center min-w-[25vw] basis-1/2 p-10 min-h-screen bg-[whitesmoke]'>
-        <Textarea
-          onChange={(e) => setText(e.target.value)}
-          value={text}
-          className='w-4/5 '
-        />
+      <div className='flex justify-center min-w-[25vw] basis-1/2 p-10  bg-[whitesmoke]'>
+        <Accordion className='w-full mt-10' type='single' collapsible>
+          <AccordionItem className='w-full' value='item-1'>
+            <AccordionTrigger className='w-full text-xl font-semibold'>
+              Exercise 1
+            </AccordionTrigger>
+            <AccordionContent className=' p-2'>
+              <Textarea
+                onChange={(e) => setText(e.target.value)}
+                value={text}
+                className='w-full min-h-[30vh] h-full '
+              />
+              <br />
+              <Assistant />
+            </AccordionContent>
+          </AccordionItem>
+        </Accordion>
       </div>
       <div className='fixed right-10 top-10'>
         <Popover>
-          <PopoverTrigger>
-            <Button>Math</Button>
+          <PopoverTrigger className='bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 rounded-md'>
+            Math
           </PopoverTrigger>
+
           <PopoverContent>
             <Keyboard onKeyPress={(key) => setText(text + key)} />
           </PopoverContent>
