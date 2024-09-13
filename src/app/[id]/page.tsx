@@ -57,29 +57,59 @@ export default function StudyPage() {
     setPageNumber(1);
   }
 
-  const handleFileUpload = async () => {
+  const handleFileUpload = async (content: string) => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
-    console.log(doc);
+
     if (doc === null || !user) return;
     try {
-      const { data, error } = await supabase.storage
-        .from('PDFS')
-        .upload(user.id + '/' + doc.name, doc, {
-          upsert: false,
+      if (content) {
+        const res = await fetch('/api/text-generation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            message: content,
+          }),
         });
-      if (error) {
-        throw error;
+        const data = await res.json();
+        console.log('OpenAi response', data);
       }
     } catch (error) {
-      console.log(error);
+      console.error(error);
       alert('Error uploading file');
     }
   };
 
+  const getPageContent = async (pageNumber: number) => {
+    if (doc) {
+      const fileReader = new FileReader();
+      fileReader.onload = async function () {
+        const typedArray = new Uint8Array(this.result as ArrayBuffer);
+        const pdf = await pdfjs.getDocument(typedArray).promise;
+        const page = await pdf.getPage(pageNumber);
+        const textContentObj = await page.getTextContent();
+        const pageText = textContentObj.items
+          .map((item) => {
+            if ('str' in item) {
+              return item.str;
+            }
+            return '';
+          })
+          .join(' ');
+        const textContent = pageText + '\n\n';
+        console.log(textContent);
+        await handleFileUpload(textContent);
+      };
+
+      fileReader.readAsArrayBuffer(doc);
+    }
+  };
+
   useEffect(() => {
-    handleFileUpload();
+    getPageContent(1);
   }, [doc]);
 
   return (
