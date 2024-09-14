@@ -19,7 +19,7 @@ export async function POST(request: Request, context: any) {
           {
             role: 'system',
             content:
-              "Split the following text's exercises and return summarys of them as a JSON array. If there are no exercises, return an empty array.",
+              "Split the following text's exercises and return a JSON array that for each exercise has an object that includes an exercise_name, points,question, study_before_solving. Study before solving should include the knowledge required for the question to be solved. If there are no exercises, return an empty array.",
           },
           { role: 'user', content: data.message },
         ],
