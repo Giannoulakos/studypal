@@ -49,10 +49,8 @@ export default function StudyPage() {
   const [userIsWriting, setUserIsWriting] = useState<boolean>(false);
 
   const [exerciseData, setExerciseData] = useState<any>(null);
-  const [lastFocusedExercise, setLastFocusedExercise] = useState<string | null>(
-    null
-  );
-  const [hint, setHint] = useState<string[]>([]);
+  const [lastFocusedExercise, setLastFocusedExercise] = useState<any>(null);
+  const [hint, setHint] = useState<any>([]);
 
   const supabase = createClient();
 
@@ -134,12 +132,15 @@ export default function StudyPage() {
           },
           body: JSON.stringify({
             request: 'hint',
-            message: lastFocusedExercise,
+            message: lastFocusedExercise.question,
           }),
         });
         const data = await res.json();
         console.log('OpenAi response', data);
-        setHint((prevHint) => [...prevHint, data]);
+        setHint((prevHint: any) => [
+          ...prevHint,
+          { data, name: lastFocusedExercise.exercise_name },
+        ]);
       }
     } catch (error) {
       console.error(error);
@@ -224,7 +225,7 @@ export default function StudyPage() {
                 className='w-full mt-10'
                 type='single'
                 onFocus={() => {
-                  setLastFocusedExercise(exercise.question);
+                  setLastFocusedExercise(exercise);
                   console.log(lastFocusedExercise);
                 }}
                 collapsible
@@ -260,17 +261,20 @@ export default function StudyPage() {
                       onBlur={() => setUserIsWriting(false)}
                     />
                     <br />
-                    {hint.length > 0 && (
-                      <>
-                        <div>
-                          <p className='font-semibold text-lg'>
-                            StudyPal Response:
-                          </p>
-                          <p>{hint}</p>
-                        </div>
-                        <br />
-                      </>
-                    )}
+                    {hint.length > 0 &&
+                      hint.map((hint: any, index: number) => {
+                        if (hint.name == exercise.exercise_name) {
+                          return (
+                            <div key={index}>
+                              <p className='font-semibold text-lg'>
+                                StudyPal Response:
+                              </p>
+                              <p>{hint.data}</p>
+                            </div>
+                          );
+                        }
+                      })}
+                    <br />
                     <Assistant isWriting={userIsWriting} onHint={handleHint} />
                   </AccordionContent>
                 </AccordionItem>
