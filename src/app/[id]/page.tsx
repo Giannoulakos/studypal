@@ -31,6 +31,7 @@ import { pdfjs } from 'react-pdf';
 import Keyboard from '@/components/ui/mathkeyboard/keyboard';
 import { createClient } from '../../../utils/supabase/client';
 import { Assistant } from '@/components/ui/assistant/assistant';
+import dummyData from '@/dummy-data/pdf-example.json';
 
 // Error comes from pdfjs. When you find time fix it.
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -45,6 +46,13 @@ export default function StudyPage() {
   const [pageNumber, setPageNumber] = useState<number>(0);
 
   const [text, setText] = useState<string>('');
+  const [userIsWriting, setUserIsWriting] = useState<boolean>(false);
+
+  const [exerciseData, setExerciseData] = useState<any>(null);
+  const [lastFocusedExercise, setLastFocusedExercise] = useState<string | null>(
+    null
+  );
+  const [hint, setHint] = useState<string[]>([]);
 
   const supabase = createClient();
 
@@ -71,11 +79,13 @@ export default function StudyPage() {
             'Content-Type': 'application/json',
           },
           body: JSON.stringify({
+            request: 'initial',
             message: content,
           }),
         });
         const data = await res.json();
         console.log('OpenAi response', data);
+        setExerciseData(data.exercises);
       }
     } catch (error) {
       console.error(error);
@@ -108,9 +118,43 @@ export default function StudyPage() {
     }
   };
 
+  const handleHint = async () => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+
+    if (!user) return;
+    console.log('entered handlehint');
+    try {
+      if (lastFocusedExercise) {
+        const res = await fetch('/api/text-generation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            request: 'hint',
+            message: lastFocusedExercise,
+          }),
+        });
+        const data = await res.json();
+        console.log('OpenAi response', data);
+        setHint((prevHint) => [...prevHint, data]);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error uploading file');
+    }
+  };
+
   useEffect(() => {
-    getPageContent(1);
+    // getPageContent(1);
+    console.log(exerciseData);
   }, [doc]);
+  useEffect(() => {
+    console.log(dummyData.exercises);
+    setExerciseData(dummyData.exercises);
+  }, []);
 
   return (
     <main className='flex h-full min-h-screen'>
@@ -127,6 +171,7 @@ export default function StudyPage() {
           <PaginationContent>
             <PaginationItem>
               <PaginationPrevious
+                className='cursor-pointer'
                 onClick={() => pageNumber > 1 && setPageNumber(pageNumber - 1)}
               />
             </PaginationItem>
@@ -138,7 +183,7 @@ export default function StudyPage() {
                       onClick={() => setPageNumber(num)}
                       isActive={num === pageNumber}
                       className={
-                        'rounded-md border-2 border-transparent px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'
+                        'cursor-pointer rounded-md border-2 border-transparent px-4 py-2 text-sm font-medium focus:outline-none focus:ring-2 focus:ring-ring focus:ring-offset-2'
                       }
                     >
                       {num}
@@ -153,6 +198,7 @@ export default function StudyPage() {
 
             <PaginationItem>
               <PaginationNext
+                className='cursor-pointer'
                 onClick={() =>
                   pageNumber < numPagesArr.length &&
                   setPageNumber(pageNumber + 1)
@@ -169,23 +215,68 @@ export default function StudyPage() {
           </div>
         )}
       </div>
-      <div className='flex justify-center min-w-[25vw] basis-1/2 p-10  bg-[whitesmoke]'>
-        <Accordion className='w-full mt-10' type='single' collapsible>
-          <AccordionItem className='w-full' value='item-1'>
-            <AccordionTrigger className='w-full text-xl font-semibold'>
-              Exercise 1
-            </AccordionTrigger>
-            <AccordionContent className=' p-2'>
-              <Textarea
-                onChange={(e) => setText(e.target.value)}
-                value={text}
-                className='w-full min-h-[30vh] h-full '
-              />
-              <br />
-              <Assistant />
-            </AccordionContent>
-          </AccordionItem>
-        </Accordion>
+      <div className='flex flex-col items-center  min-w-[25vw] basis-1/2 p-10  bg-[whitesmoke]'>
+        {exerciseData &&
+          exerciseData.map((exercise: any, index: number) => {
+            return (
+              <Accordion
+                key={index}
+                className='w-full mt-10'
+                type='single'
+                onFocus={() => {
+                  setLastFocusedExercise(exercise.question);
+                  console.log(lastFocusedExercise);
+                }}
+                collapsible
+              >
+                <AccordionItem className='w-full' value='item-1'>
+                  <AccordionTrigger className='w-full text-xl font-semibold'>
+                    {exercise.exercise_name}
+                  </AccordionTrigger>
+                  <AccordionContent className=' p-2'>
+                    <div className='grid grid-cols-1 gap-y-4'>
+                      <div>
+                        <p className='font-semibold text-lg'>
+                          Points: {exercise.points}
+                        </p>
+                      </div>
+                      <div>
+                        <p className='font-semibold text-lg'>
+                          What you need to know:
+                        </p>
+                        <p>{exercise.study_before_solving}</p>
+                      </div>
+                      <div>
+                        <p className='font-semibold text-lg'>Question:</p>
+                        <p>{exercise.question}</p>
+                      </div>
+                    </div>
+                    <br />
+                    <Textarea
+                      onChange={(e) => setText(e.target.value)}
+                      value={text}
+                      className='w-full min-h-[30vh] h-full '
+                      onFocus={() => setUserIsWriting(true)}
+                      onBlur={() => setUserIsWriting(false)}
+                    />
+                    <br />
+                    {hint.length > 0 && (
+                      <>
+                        <div>
+                          <p className='font-semibold text-lg'>
+                            StudyPal Response:
+                          </p>
+                          <p>{hint}</p>
+                        </div>
+                        <br />
+                      </>
+                    )}
+                    <Assistant isWriting={userIsWriting} onHint={handleHint} />
+                  </AccordionContent>
+                </AccordionItem>
+              </Accordion>
+            );
+          })}
       </div>
       <div className='fixed right-10 top-10'>
         <Popover>

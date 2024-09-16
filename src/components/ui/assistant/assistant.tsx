@@ -5,9 +5,10 @@ import { useState } from 'react';
 
 interface AssistantProps {
   isWriting: boolean;
+  onHint: any;
 }
 
-const Assistant: React.FC<AssistantProps> = ({ isWriting }) => {
+const Assistant: React.FC<AssistantProps> = ({ isWriting, onHint }) => {
   const [question, setQuestion] = useState<string>('');
 
   return (
@@ -22,13 +23,12 @@ const Assistant: React.FC<AssistantProps> = ({ isWriting }) => {
           </Button>
         ) : (
           <>
-            {isWriting ? (
-              <Button className='ml-2 hover:bg-green-400 bg-green-500 font-semibold'>
-                Need Help?
-              </Button>
-            ) : (
-              <span className=''>StudyPal is waiting...</span>
-            )}
+            <Button
+              onClick={onHint}
+              className='ml-2 hover:bg-green-400 bg-green-500 font-semibold'
+            >
+              Hint?
+            </Button>
           </>
         )}
       </div>
