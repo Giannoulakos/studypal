@@ -25,7 +25,7 @@ export async function POST(request: Request, context: any) {
             },
             { role: 'user', content: data.message },
           ],
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4o-mini',
           response_format: { type: 'json_object' },
         });
         console.log(completion.choices[0]);
@@ -40,7 +40,7 @@ export async function POST(request: Request, context: any) {
             },
             { role: 'user', content: data.message },
           ],
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4o-mini',
           response_format: { type: 'text' },
         });
         console.log(completion.choices[0]);
@@ -55,7 +55,7 @@ export async function POST(request: Request, context: any) {
             },
             { role: 'user', content: data.message },
           ],
-          model: 'gpt-3.5-turbo',
+          model: 'gpt-4o-mini',
           response_format: { type: 'text' },
         });
         console.log(completion.choices[0]);
