@@ -87,14 +87,16 @@ const ExerciseTab: React.FC<ExerciseTabProps> = ({
               )}
               {aiChat.length > 0 &&
                 aiChat.map((chat: any, index: number) => {
-                  return (
-                    <div key={index}>
-                      <p>
-                        <span className='font-semibold'>{index + 1}.</span>{' '}
-                        {chat}
-                      </p>
-                    </div>
-                  );
+                  if (chat.name == exercise.exercise_name) {
+                    return (
+                      <div key={index}>
+                        <p>
+                          <span className='font-semibold'>{index + 1}.</span>{' '}
+                          {chat.data}
+                        </p>
+                      </div>
+                    );
+                  }
                 })}
             </div>
 
