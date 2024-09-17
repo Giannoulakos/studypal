@@ -41,12 +41,12 @@ export default function StudyPage() {
   const [pageNumber, setPageNumber] = useState<number>(0);
 
   const [text, setText] = useState<string>('');
-  const { userPrompt } = useAppContext();
+  const { userPrompt, setSendLoading } = useAppContext();
 
   const [exerciseData, setExerciseData] = useState<any>(null);
   const [lastFocusedExercise, setLastFocusedExercise] = useState<any>(null);
   const [hint, setHint] = useState<any>([]);
-  const [aiChat, setAiChat] = useState<string[]>([]);
+  const [aiChat, setAiChat] = useState<any[]>([]);
 
   const supabase = createClient();
 
@@ -145,6 +145,7 @@ export default function StudyPage() {
   };
 
   const handleUserPrompt = async (userPrompt: string) => {
+    setSendLoading(true);
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -173,12 +174,16 @@ export default function StudyPage() {
         });
         const data = await res.json();
         console.log('OpenAi response', data);
-        setAiChat((prevAiChat: string[]) => [...prevAiChat, data]);
+        setAiChat((prevAiChat: string[]) => [
+          ...prevAiChat,
+          { data, name: lastFocusedExercise.exercise_name },
+        ]);
       }
     } catch (error) {
       console.error(error);
       alert('Error handling user prompt');
     }
+    setSendLoading(false);
   };
 
   useEffect(() => {
@@ -186,7 +191,6 @@ export default function StudyPage() {
     console.log(exerciseData);
   }, [doc]);
   useEffect(() => {
-    console.log('userPrompt', userPrompt);
     if (userPrompt === '' || !lastFocusedExercise) return;
     handleUserPrompt(userPrompt);
   }, [userPrompt]);
@@ -254,13 +258,21 @@ export default function StudyPage() {
           </div>
         )}
       </div>
-      <ExerciseTab
-        exerciseData={exerciseData}
-        aiChat={aiChat}
-        hintArr={hint}
-        onExerciseFocus={setLastFocusedExercise}
-        onHint={handleHint}
-      />
+      <div className='flex flex-col items-center  min-w-[25vw] basis-1/2 p-10  bg-[whitesmoke]'>
+        {exerciseData &&
+          exerciseData.map((exercise: any, index: number) => {
+            return (
+              <ExerciseTab
+                exercise={exercise}
+                hintArr={hint}
+                aiChat={aiChat}
+                onExerciseFocus={setLastFocusedExercise}
+                onHint={handleHint}
+                key={index}
+              />
+            );
+          })}
+      </div>
       <div className='fixed right-10 top-10'>
         <Popover>
           <PopoverTrigger className='bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 rounded-md'>

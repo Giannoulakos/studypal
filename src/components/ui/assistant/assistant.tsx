@@ -1,10 +1,21 @@
 'use client';
 
-import { Button } from '../button';
 import { CircleUserRound } from 'lucide-react';
 import { Input } from '../input';
-import { useState } from 'react';
+import { useEffect, useState } from 'react';
 import { useAppContext } from '@/context';
+import { Loader2 } from 'lucide-react';
+
+import { Button } from '@/components/ui/button';
+
+export function ButtonLoading() {
+  return (
+    <Button disabled>
+      <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+      Please wait
+    </Button>
+  );
+}
 
 interface AssistantProps {
   isWriting: boolean;
@@ -14,7 +25,11 @@ interface AssistantProps {
 const Assistant: React.FC<AssistantProps> = ({ isWriting, onHint }) => {
   const [question, setQuestion] = useState<string>('');
 
-  const { setUserPrompt } = useAppContext();
+  const { sendLoading, setUserPrompt } = useAppContext();
+
+  useEffect(() => {
+    if (!sendLoading) setQuestion('');
+  }, [sendLoading]);
 
   return (
     <div className='flex items-center justify-between gap-2 w-full'>
@@ -23,14 +38,23 @@ const Assistant: React.FC<AssistantProps> = ({ isWriting, onHint }) => {
           <CircleUserRound color='green' />
         </Button>
         {question !== '' ? (
-          <Button
-            onClick={(e: any) => {
-              setUserPrompt(question);
-            }}
-            className='ml-2 hover:bg-green-400 bg-green-500 font-semibold'
-          >
-            Send
-          </Button>
+          <>
+            {sendLoading ? (
+              <Button disabled>
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                Please wait
+              </Button>
+            ) : (
+              <Button
+                onClick={(e: any) => {
+                  setUserPrompt(question);
+                }}
+                className='ml-2 hover:bg-green-400 bg-green-500 font-semibold'
+              >
+                Send
+              </Button>
+            )}
+          </>
         ) : (
           <>
             <Button
