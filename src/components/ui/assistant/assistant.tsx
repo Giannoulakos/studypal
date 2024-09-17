@@ -1,20 +1,20 @@
+'use client';
+
 import { Button } from '../button';
 import { CircleUserRound } from 'lucide-react';
 import { Input } from '../input';
 import { useState } from 'react';
+import { useAppContext } from '@/context';
 
 interface AssistantProps {
   isWriting: boolean;
   onHint: any;
-  onPrompt: any;
 }
 
-const Assistant: React.FC<AssistantProps> = ({
-  isWriting,
-  onHint,
-  onPrompt,
-}) => {
+const Assistant: React.FC<AssistantProps> = ({ isWriting, onHint }) => {
   const [question, setQuestion] = useState<string>('');
+
+  const { setUserPrompt } = useAppContext();
 
   return (
     <div className='flex items-center justify-between gap-2 w-full'>
@@ -25,8 +25,7 @@ const Assistant: React.FC<AssistantProps> = ({
         {question !== '' ? (
           <Button
             onClick={(e: any) => {
-              e.preventDefault();
-              onPrompt(question);
+              setUserPrompt(question);
             }}
             className='ml-2 hover:bg-green-400 bg-green-500 font-semibold'
           >

@@ -1,7 +1,7 @@
 'use client';
 
 import { InputFile } from '@/components/ui/input-file';
-import { Textarea } from '@/components/ui/textarea';
+
 import {
   Pagination,
   PaginationContent,
@@ -16,12 +16,7 @@ import {
   PopoverContent,
   PopoverTrigger,
 } from '@/components/ui/popover';
-import {
-  Accordion,
-  AccordionContent,
-  AccordionItem,
-  AccordionTrigger,
-} from '@/components/ui/accordion';
+import ExerciseTab from '@/components/ui/exercises-tab/exercise-tab';
 
 import { useEffect, useState } from 'react';
 import { Document, Page } from 'react-pdf';
@@ -30,7 +25,7 @@ import 'react-pdf/dist/Page/TextLayer.css';
 import { pdfjs } from 'react-pdf';
 import Keyboard from '@/components/ui/mathkeyboard/keyboard';
 import { createClient } from '../../../utils/supabase/client';
-import { Assistant } from '@/components/ui/assistant/assistant';
+import { useAppContext } from '@/context';
 import dummyData from '@/dummy-data/pdf-example.json';
 
 // Error comes from pdfjs. When you find time fix it.
@@ -46,7 +41,7 @@ export default function StudyPage() {
   const [pageNumber, setPageNumber] = useState<number>(0);
 
   const [text, setText] = useState<string>('');
-  const [userIsWriting, setUserIsWriting] = useState<boolean>(false);
+  const { userPrompt } = useAppContext();
 
   const [exerciseData, setExerciseData] = useState<any>(null);
   const [lastFocusedExercise, setLastFocusedExercise] = useState<any>(null);
@@ -191,6 +186,11 @@ export default function StudyPage() {
     console.log(exerciseData);
   }, [doc]);
   useEffect(() => {
+    console.log('userPrompt', userPrompt);
+    if (userPrompt === '' || !lastFocusedExercise) return;
+    handleUserPrompt(userPrompt);
+  }, [userPrompt]);
+  useEffect(() => {
     console.log(dummyData.exercises);
     setExerciseData(dummyData.exercises);
   }, []);
@@ -254,91 +254,13 @@ export default function StudyPage() {
           </div>
         )}
       </div>
-      <div className='flex flex-col items-center  min-w-[25vw] basis-1/2 p-10  bg-[whitesmoke]'>
-        {exerciseData &&
-          exerciseData.map((exercise: any, index: number) => {
-            return (
-              <Accordion
-                key={index}
-                className='w-full mt-10'
-                type='single'
-                onFocus={() => {
-                  setLastFocusedExercise(exercise);
-                  console.log(lastFocusedExercise);
-                }}
-                collapsible
-              >
-                <AccordionItem className='w-full' value='item-1'>
-                  <AccordionTrigger className='w-full text-xl font-semibold'>
-                    {exercise.exercise_name}
-                  </AccordionTrigger>
-                  <AccordionContent className=' p-2'>
-                    <div className='grid grid-cols-1 gap-y-4'>
-                      <div>
-                        <p className='font-semibold text-lg'>
-                          Points: {exercise.points}
-                        </p>
-                      </div>
-                      <div>
-                        <p className='font-semibold text-lg'>
-                          What you need to know:
-                        </p>
-                        <p>{exercise.study_before_solving}</p>
-                      </div>
-                      <div>
-                        <p className='font-semibold text-lg'>Question:</p>
-                        <p>{exercise.question}</p>
-                      </div>
-                    </div>
-                    <br />
-                    <Textarea
-                      onChange={(e) => setText(e.target.value)}
-                      value={text}
-                      className='w-full min-h-[30vh] h-full '
-                      onFocus={() => setUserIsWriting(true)}
-                      onBlur={() => setUserIsWriting(false)}
-                    />
-                    <br />
-                    {hint.length > 0 &&
-                      hint.map((hint: any, index: number) => {
-                        if (hint.name == exercise.exercise_name) {
-                          return (
-                            <div key={index}>
-                              <p className='font-semibold text-lg'>
-                                StudyPal Response:
-                              </p>
-                              <p>{hint.data}</p>
-                            </div>
-                          );
-                        }
-                      })}
-                    <br />
-                    <div className='flex flex-col gap-y-2'>
-                      {aiChat.length > 0 && (
-                        <p className='font-semibold text-lg'>StudyPal Chat:</p>
-                      )}
-                      {aiChat.length > 0 &&
-                        aiChat.map((chat: any, index: number) => {
-                          return (
-                            <div key={index}>
-                              <p>{chat}</p>
-                            </div>
-                          );
-                        })}
-                    </div>
-
-                    <br />
-                    <Assistant
-                      isWriting={userIsWriting}
-                      onPrompt={handleUserPrompt}
-                      onHint={handleHint}
-                    />
-                  </AccordionContent>
-                </AccordionItem>
-              </Accordion>
-            );
-          })}
-      </div>
+      <ExerciseTab
+        exerciseData={exerciseData}
+        aiChat={aiChat}
+        hintArr={hint}
+        onExerciseFocus={setLastFocusedExercise}
+        onHint={handleHint}
+      />
       <div className='fixed right-10 top-10'>
         <Popover>
           <PopoverTrigger className='bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 rounded-md'>
