@@ -10,6 +10,7 @@ const AppContext = createContext<any>({
 export function AppWrapper({ children }: { children: React.ReactNode }) {
   const [userPrompt, setUserPrompt] = useState<string>();
   const [sendLoading, setSendLoading] = useState<boolean>(false);
+  const [hintLoading, setHintLoading] = useState<boolean>(false);
 
   return (
     <AppContext.Provider
@@ -18,6 +19,8 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
         setUserPrompt,
         sendLoading,
         setSendLoading,
+        hintLoading,
+        setHintLoading,
       }}
     >
       {children}

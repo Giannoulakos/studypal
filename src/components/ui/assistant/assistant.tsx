@@ -25,7 +25,7 @@ interface AssistantProps {
 const Assistant: React.FC<AssistantProps> = ({ isWriting, onHint }) => {
   const [question, setQuestion] = useState<string>('');
 
-  const { sendLoading, setUserPrompt } = useAppContext();
+  const { sendLoading, hintLoading, setUserPrompt } = useAppContext();
 
   useEffect(() => {
     if (!sendLoading) setQuestion('');
@@ -57,12 +57,19 @@ const Assistant: React.FC<AssistantProps> = ({ isWriting, onHint }) => {
           </>
         ) : (
           <>
-            <Button
-              onClick={onHint}
-              className='ml-2 hover:bg-green-400 bg-green-500 font-semibold'
-            >
-              Hint?
-            </Button>
+            {hintLoading ? (
+              <Button disabled>
+                <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                Please wait
+              </Button>
+            ) : (
+              <Button
+                onClick={onHint}
+                className='ml-2 hover:bg-green-400 bg-green-500 font-semibold'
+              >
+                Hint?
+              </Button>
+            )}
           </>
         )}
       </div>

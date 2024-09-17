@@ -41,7 +41,7 @@ export default function StudyPage() {
   const [pageNumber, setPageNumber] = useState<number>(0);
 
   const [text, setText] = useState<string>('');
-  const { userPrompt, setSendLoading } = useAppContext();
+  const { userPrompt, setSendLoading, setHintLoading } = useAppContext();
 
   const [exerciseData, setExerciseData] = useState<any>(null);
   const [lastFocusedExercise, setLastFocusedExercise] = useState<any>(null);
@@ -113,6 +113,7 @@ export default function StudyPage() {
   };
 
   const handleHint = async () => {
+    setHintLoading(true);
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -142,6 +143,7 @@ export default function StudyPage() {
       console.error(error);
       alert('Error handling hint');
     }
+    setHintLoading(false);
   };
 
   const handleUserPrompt = async (userPrompt: string) => {
