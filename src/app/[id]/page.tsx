@@ -51,6 +51,7 @@ export default function StudyPage() {
   const [exerciseData, setExerciseData] = useState<any>(null);
   const [lastFocusedExercise, setLastFocusedExercise] = useState<any>(null);
   const [hint, setHint] = useState<any>([]);
+  const [aiChat, setAiChat] = useState<string[]>([]);
 
   const supabase = createClient();
 
@@ -63,7 +64,7 @@ export default function StudyPage() {
     setPageNumber(1);
   }
 
-  const handleFileUpload = async (content: string) => {
+  const handlePDF = async (content: string) => {
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -87,7 +88,7 @@ export default function StudyPage() {
       }
     } catch (error) {
       console.error(error);
-      alert('Error uploading file');
+      alert('Error handling PDF');
     }
   };
 
@@ -109,7 +110,7 @@ export default function StudyPage() {
           .join(' ');
         const textContent = pageText + '\n\n';
         console.log(textContent);
-        await handleFileUpload(textContent);
+        await handlePDF(textContent);
       };
 
       fileReader.readAsArrayBuffer(doc);
@@ -144,7 +145,44 @@ export default function StudyPage() {
       }
     } catch (error) {
       console.error(error);
-      alert('Error uploading file');
+      alert('Error handling hint');
+    }
+  };
+
+  const handleUserPrompt = async (userPrompt: string) => {
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    console.log(
+      userPrompt +
+        '\n\n' +
+        'refering to this exercise: ' +
+        lastFocusedExercise.question
+    );
+    if (!user || !userPrompt) return;
+    try {
+      if (lastFocusedExercise) {
+        const res = await fetch('/api/text-generation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            request: 'user_prompt',
+            message:
+              userPrompt +
+              '\n\n' +
+              'refering to this exercise: ' +
+              lastFocusedExercise.question,
+          }),
+        });
+        const data = await res.json();
+        console.log('OpenAi response', data);
+        setAiChat((prevAiChat: string[]) => [...prevAiChat, data]);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error handling user prompt');
     }
   };
 
@@ -275,7 +313,26 @@ export default function StudyPage() {
                         }
                       })}
                     <br />
-                    <Assistant isWriting={userIsWriting} onHint={handleHint} />
+                    <div className='flex flex-col gap-y-2'>
+                      {aiChat.length > 0 && (
+                        <p className='font-semibold text-lg'>StudyPal Chat:</p>
+                      )}
+                      {aiChat.length > 0 &&
+                        aiChat.map((chat: any, index: number) => {
+                          return (
+                            <div key={index}>
+                              <p>{chat}</p>
+                            </div>
+                          );
+                        })}
+                    </div>
+
+                    <br />
+                    <Assistant
+                      isWriting={userIsWriting}
+                      onPrompt={handleUserPrompt}
+                      onHint={handleHint}
+                    />
                   </AccordionContent>
                 </AccordionItem>
               </Accordion>

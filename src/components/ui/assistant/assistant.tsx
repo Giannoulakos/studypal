@@ -6,9 +6,14 @@ import { useState } from 'react';
 interface AssistantProps {
   isWriting: boolean;
   onHint: any;
+  onPrompt: any;
 }
 
-const Assistant: React.FC<AssistantProps> = ({ isWriting, onHint }) => {
+const Assistant: React.FC<AssistantProps> = ({
+  isWriting,
+  onHint,
+  onPrompt,
+}) => {
   const [question, setQuestion] = useState<string>('');
 
   return (
@@ -18,7 +23,13 @@ const Assistant: React.FC<AssistantProps> = ({ isWriting, onHint }) => {
           <CircleUserRound color='green' />
         </Button>
         {question !== '' ? (
-          <Button className='ml-2 hover:bg-green-400 bg-green-500 font-semibold'>
+          <Button
+            onClick={(e: any) => {
+              e.preventDefault();
+              onPrompt(question);
+            }}
+            className='ml-2 hover:bg-green-400 bg-green-500 font-semibold'
+          >
             Send
           </Button>
         ) : (

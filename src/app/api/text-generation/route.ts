@@ -10,7 +10,7 @@ export async function POST(request: Request, context: any) {
   } = await supabase.auth.getUser();
   type Data = {
     message: string;
-    request: 'initial' | 'hint';
+    request: 'initial' | 'hint' | 'user_prompt';
   };
   const data: Data = await request.json();
   if (data.message && user) {
@@ -37,6 +37,21 @@ export async function POST(request: Request, context: any) {
               role: 'system',
               content:
                 'Give the user a hint on how to solve the following question without answeritn it. ',
+            },
+            { role: 'user', content: data.message },
+          ],
+          model: 'gpt-3.5-turbo',
+          response_format: { type: 'text' },
+        });
+        console.log(completion.choices[0]);
+        return NextResponse.json(completion.choices[0].message.content);
+      } else if (data.request == 'user_prompt') {
+        const completion = await openai.chat.completions.create({
+          messages: [
+            {
+              role: 'system',
+              content:
+                'You are a helpful assistant that answers questions based on the provided context.',
             },
             { role: 'user', content: data.message },
           ],
