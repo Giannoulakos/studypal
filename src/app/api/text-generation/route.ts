@@ -20,8 +20,14 @@ export async function POST(request: Request, context: any) {
           messages: [
             {
               role: 'system',
-              content:
-                "Split the following text's exercises and return a JSON array that for each exercise has an object that includes an exercise_name, points,question, study_before_solving. Study before solving should include the knowledge required for the question to be solved. If there are no exercises, return an empty array.",
+              content: `Split the following text's exercises and return a JSON array 
+                that for each exercise has an object that includes an exercise_name, 
+                points,question, study_before_solving. Study before solving should be an
+                array that includes the fields {name, explanation} for each topic that
+                it's knowledge is required for the question to be solved.
+                The explanation should adequately explain the knowledge required for the question
+                to be solved and include an example of how to use the knowledge. 
+                If there are no exercises, return an empty array.`,
             },
             { role: 'user', content: data.message },
           ],
@@ -29,7 +35,7 @@ export async function POST(request: Request, context: any) {
           response_format: { type: 'json_object' },
         });
         console.log(completion.choices[0]);
-        return NextResponse.json(completion.choices[0].message.content);
+        return NextResponse.json(completion.choices[0].message);
       } else if (data.request === 'hint') {
         const completion = await openai.chat.completions.create({
           messages: [

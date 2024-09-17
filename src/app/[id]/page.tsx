@@ -78,8 +78,9 @@ export default function StudyPage() {
           }),
         });
         const data = await res.json();
-        console.log('OpenAi response', data);
-        setExerciseData(data.exercises);
+        const finalData = JSON.parse(data.content);
+        console.log('OpenAi response', finalData);
+        setExerciseData(finalData.exercises);
       }
     } catch (error) {
       console.error(error);
@@ -189,7 +190,7 @@ export default function StudyPage() {
   };
 
   useEffect(() => {
-    // getPageContent(1);
+    getPageContent(1);
     console.log(exerciseData);
   }, [doc]);
   useEffect(() => {
@@ -197,8 +198,8 @@ export default function StudyPage() {
     handleUserPrompt(userPrompt);
   }, [userPrompt]);
   useEffect(() => {
-    console.log(dummyData.exercises);
-    setExerciseData(dummyData.exercises);
+    //console.log(dummyData.exercises);
+    //setExerciseData(dummyData.exercises);
   }, []);
 
   return (

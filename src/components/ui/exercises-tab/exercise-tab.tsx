@@ -49,7 +49,16 @@ const ExerciseTab: React.FC<ExerciseTabProps> = ({
               </div>
               <div>
                 <p className='font-semibold text-lg'>What you need to know:</p>
-                <p>{exercise.study_before_solving}</p>
+                {exercise.study_before_solving.map(
+                  (topic: any, index: number) => {
+                    return (
+                      <p key={index}>
+                        <span className='font-semibold'>{index + 1}.</span>{' '}
+                        {topic.name}: {topic.explanation}
+                      </p>
+                    );
+                  }
+                )}
               </div>
               <div>
                 <p className='font-semibold text-lg'>Question:</p>
