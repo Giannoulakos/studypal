@@ -75,19 +75,28 @@ const ExerciseTab: React.FC<ExerciseTabProps> = ({
                 <p className='font-semibold text-lg'>Question:</p>
                 <p>{exercise.question}</p>
               </div>
-              {stepsArr && (
-                <div>
-                  <p className='font-semibold text-lg'>Steps:</p>
-                  {stepsArr.data.map((step: any, index: number) => {
+              {stepsArr.length > 0 &&
+                stepsArr.map((el: any, elIndex: number) => {
+                  if (el.name == exercise.exercise_name) {
                     return (
-                      <p key={index}>
-                        <span className='font-semibold'>{index + 1}.</span>{' '}
-                        {step}
-                      </p>
+                      <div key={elIndex}>
+                        <p className='font-semibold text-lg'>Steps:</p>
+                        {stepsArr[elIndex].data.map(
+                          (step: any, index: number) => {
+                            return (
+                              <p key={index}>
+                                <span className='font-semibold'>
+                                  {index + 1}.
+                                </span>{' '}
+                                {step}
+                              </p>
+                            );
+                          }
+                        )}
+                      </div>
                     );
-                  })}
-                </div>
-              )}
+                  }
+                })}
               <div>
                 {stepsLoading ? (
                   <Button disabled>
