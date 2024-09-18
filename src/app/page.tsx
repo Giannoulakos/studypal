@@ -79,7 +79,11 @@ export default function Home() {
       </div>
       <div className='flex justify-center items-center'>
         <div className='w-[75%] flex justify-center gap-x-10 mt-10'>
-          <Card name='John Doe' review='Great service' rating={4} />
+          <Card
+            name='John Doe'
+            review='Great service, combining trust and accessibility'
+            rating={4}
+          />
           <Card name='Jane Doe' review='Good service' rating={3} />
           <Card name='Bob Doe' review='Decent service' rating={3} />
           <Card name='Alice Doe' review='Fantastic service' rating={5} />
