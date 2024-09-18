@@ -3,7 +3,7 @@ import { Input } from '@/components/ui/input';
 import { Button } from '@/components/ui/button';
 import { CircleUserRound } from 'lucide-react';
 import { Textarea } from '@/components/ui/textarea';
-import Card from '@/components/ui/review-card/card';
+import { FileText, MoveRight, Footprints, CheckCheck } from 'lucide-react';
 
 export default function Home() {
   return (
@@ -78,16 +78,27 @@ export default function Home() {
         </div>
       </div>
       <div className='flex justify-center items-center'>
-        <div className='w-[75%] flex justify-center gap-x-10 mt-10'>
-          <Card
-            name='John Doe'
-            review='Great service, combining trust and accessibility'
-            rating={4}
-          />
-          <Card name='Jane Doe' review='Good service' rating={3} />
-          <Card name='Bob Doe' review='Decent service' rating={3} />
-          <Card name='Alice Doe' review='Fantastic service' rating={5} />
-          <Card name='Charlie Doe' review='Good service' rating={3} />
+        <div className='w-[75%] flex justify-between items-center gap-x-10 mt-10'>
+          <div className='flex flex-col gap-y-10 items-center'>
+            <FileText width={100} height={100} />
+            <p className='w-1/2 font-semibold text-center'>
+              Split homework's file content into sections
+            </p>
+          </div>
+          <MoveRight width={100} height={100} />
+          <div className='flex flex-col gap-y-10 items-center'>
+            <Footprints width={100} height={100} />
+            <p className='w-1/2 font-semibold text-center'>
+              Get hints split into steps and ask additional questions
+            </p>
+          </div>
+          <MoveRight width={100} height={100} />
+          <div className='flex flex-col gap-y-10 items-center'>
+            <CheckCheck width={100} height={100} />
+            <p className='w-1/2 font-semibold text-center'>
+              Check your answers and correct your mistakes
+            </p>
+          </div>
         </div>
       </div>
     </main>
