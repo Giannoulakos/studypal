@@ -99,7 +99,7 @@ const ExerciseTab: React.FC<ExerciseTabProps> = ({
                     onClick={onSteps}
                     className='hover:bg-green-400 bg-green-500 font-semibold'
                   >
-                    Struggling
+                    Show Steps
                   </Button>
                 )}
               </div>

@@ -72,7 +72,7 @@ export async function POST(request: Request, context: any) {
             {
               role: 'system',
               content:
-                'Give the user short steps of thoughts without giving away the answer. Each step should be a string in a json array.',
+                'Give the user short steps of the thought process without giving away the answer. Each step should be a string in a json array called steps.',
             },
             { role: 'user', content: data.message },
           ],
