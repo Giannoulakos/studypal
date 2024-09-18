@@ -41,12 +41,14 @@ export default function StudyPage() {
   const [pageNumber, setPageNumber] = useState<number>(0);
 
   const [text, setText] = useState<string>('');
-  const { userPrompt, setSendLoading, setHintLoading } = useAppContext();
+  const { userPrompt, setSendLoading, setHintLoading, setStepsLoading } =
+    useAppContext();
 
   const [exerciseData, setExerciseData] = useState<any>(null);
   const [lastFocusedExercise, setLastFocusedExercise] = useState<any>(null);
   const [hint, setHint] = useState<any>([]);
   const [aiChat, setAiChat] = useState<any[]>([]);
+  const [stepsArr, setStepsArr] = useState<string[]>([]);
 
   const supabase = createClient();
 
@@ -189,6 +191,42 @@ export default function StudyPage() {
     setSendLoading(false);
   };
 
+  const handleSteps = async () => {
+    setStepsLoading(true);
+    const {
+      data: { user },
+    } = await supabase.auth.getUser();
+    console.log(
+      user +
+        '\n\n' +
+        'refering to this exercise: ' +
+        lastFocusedExercise.question
+    );
+    if (!user || !lastFocusedExercise) return;
+    try {
+      if (lastFocusedExercise) {
+        const res = await fetch('/api/text-generation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            request: 'steps',
+            message: lastFocusedExercise.question,
+          }),
+        });
+        const data = await res.json();
+        console.log('OpenAi response', data);
+        const jsonData = JSON.parse(data);
+        setStepsArr(jsonData.steps);
+      }
+    } catch (error) {
+      console.error(error);
+      alert('Error handling user prompt');
+    }
+    setStepsLoading(false);
+  };
+
   useEffect(() => {
     getPageContent(1);
     console.log(exerciseData);
@@ -198,8 +236,8 @@ export default function StudyPage() {
     handleUserPrompt(userPrompt);
   }, [userPrompt]);
   useEffect(() => {
-    //console.log(dummyData.exercises);
-    //setExerciseData(dummyData.exercises);
+    console.log(dummyData.exercises);
+    setExerciseData(dummyData.exercises);
   }, []);
 
   return (
@@ -269,6 +307,8 @@ export default function StudyPage() {
                 exercise={exercise}
                 hintArr={hint}
                 aiChat={aiChat}
+                stepsArr={stepsArr}
+                onSteps={handleSteps}
                 onExerciseFocus={setLastFocusedExercise}
                 onHint={handleHint}
                 key={index}

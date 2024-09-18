@@ -10,7 +10,7 @@ export async function POST(request: Request, context: any) {
   } = await supabase.auth.getUser();
   type Data = {
     message: string;
-    request: 'initial' | 'hint' | 'user_prompt';
+    request: 'initial' | 'hint' | 'user_prompt' | 'steps';
   };
   const data: Data = await request.json();
   if (data.message && user) {
@@ -42,7 +42,7 @@ export async function POST(request: Request, context: any) {
             {
               role: 'system',
               content:
-                'Give the user a hint on how to solve the following question without answeritn it. ',
+                'Give the user a hint on how to solve the following question without answering it. ',
             },
             { role: 'user', content: data.message },
           ],
@@ -63,6 +63,21 @@ export async function POST(request: Request, context: any) {
           ],
           model: 'gpt-4o-mini',
           response_format: { type: 'text' },
+        });
+        console.log(completion.choices[0]);
+        return NextResponse.json(completion.choices[0].message.content);
+      } else if (data.request == 'steps') {
+        const completion = await openai.chat.completions.create({
+          messages: [
+            {
+              role: 'system',
+              content:
+                'Give the user short steps of thoughts without giving away the answer. Each step should be a string in a json array.',
+            },
+            { role: 'user', content: data.message },
+          ],
+          model: 'gpt-4o-mini',
+          response_format: { type: 'json_object' },
         });
         console.log(completion.choices[0]);
         return NextResponse.json(completion.choices[0].message.content);

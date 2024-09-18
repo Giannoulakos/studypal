@@ -1,30 +1,41 @@
+'use client';
+
 import {
   Accordion,
   AccordionContent,
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import { Button } from '../button';
+import { Loader2 } from 'lucide-react';
 import { Textarea } from '../textarea';
 import { useState } from 'react';
 import { Assistant } from '../assistant/assistant';
+import { useAppContext } from '@/context';
 
 interface ExerciseTabProps {
   exercise: any;
   hintArr: any;
   aiChat: any;
+  stepsArr: string[];
   onExerciseFocus: any;
   onHint: any;
+  onSteps: any;
 }
 
 const ExerciseTab: React.FC<ExerciseTabProps> = ({
   exercise,
   hintArr,
   aiChat,
+  stepsArr,
   onExerciseFocus,
   onHint,
+  onSteps,
 }) => {
   const [text, setText] = useState<string>('');
   const [userIsWriting, setUserIsWriting] = useState<boolean>(false);
+
+  const { stepsLoading } = useAppContext();
   return (
     <>
       <Accordion
@@ -54,7 +65,7 @@ const ExerciseTab: React.FC<ExerciseTabProps> = ({
                     return (
                       <p key={index}>
                         <span className='font-semibold'>{index + 1}.</span>{' '}
-                        {topic.name}: {topic.explanation}
+                        {topic.name}: {topic.explanation + topic.example}
                       </p>
                     );
                   }
@@ -63,6 +74,34 @@ const ExerciseTab: React.FC<ExerciseTabProps> = ({
               <div>
                 <p className='font-semibold text-lg'>Question:</p>
                 <p>{exercise.question}</p>
+              </div>
+              {stepsArr.length > 0 && (
+                <div>
+                  <p className='font-semibold text-lg'>Steps:</p>
+                  {stepsArr.map((step: string, index: number) => {
+                    return (
+                      <p key={index}>
+                        <span className='font-semibold'>{index + 1}.</span>{' '}
+                        {step}
+                      </p>
+                    );
+                  })}
+                </div>
+              )}
+              <div>
+                {stepsLoading ? (
+                  <Button disabled>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Please wait
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={onSteps}
+                    className='hover:bg-green-400 bg-green-500 font-semibold'
+                  >
+                    Struggling
+                  </Button>
+                )}
               </div>
             </div>
             <br />
