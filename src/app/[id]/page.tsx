@@ -48,7 +48,7 @@ export default function StudyPage() {
   const [lastFocusedExercise, setLastFocusedExercise] = useState<any>(null);
   const [hint, setHint] = useState<any>([]);
   const [aiChat, setAiChat] = useState<any[]>([]);
-  const [stepsArr, setStepsArr] = useState<string[]>([]);
+  const [stepsArr, setStepsArr] = useState<any[]>([]);
 
   const supabase = createClient();
 
@@ -218,7 +218,10 @@ export default function StudyPage() {
         const data = await res.json();
         console.log('OpenAi response', data);
         const jsonData = JSON.parse(data);
-        setStepsArr(jsonData.steps);
+        setStepsArr((prevStepsArr: any[]) => [
+          ...prevStepsArr,
+          { data: jsonData.steps, name: lastFocusedExercise.exercise_name },
+        ]);
       }
     } catch (error) {
       console.error(error);
@@ -307,7 +310,7 @@ export default function StudyPage() {
                 exercise={exercise}
                 hintArr={hint}
                 aiChat={aiChat}
-                stepsArr={stepsArr}
+                stepsArr={stepsArr[index]}
                 onSteps={handleSteps}
                 onExerciseFocus={setLastFocusedExercise}
                 onHint={handleHint}

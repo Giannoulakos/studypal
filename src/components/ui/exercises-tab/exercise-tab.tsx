@@ -17,7 +17,7 @@ interface ExerciseTabProps {
   exercise: any;
   hintArr: any;
   aiChat: any;
-  stepsArr: string[];
+  stepsArr: any;
   onExerciseFocus: any;
   onHint: any;
   onSteps: any;
@@ -75,10 +75,10 @@ const ExerciseTab: React.FC<ExerciseTabProps> = ({
                 <p className='font-semibold text-lg'>Question:</p>
                 <p>{exercise.question}</p>
               </div>
-              {stepsArr.length > 0 && (
+              {stepsArr && (
                 <div>
                   <p className='font-semibold text-lg'>Steps:</p>
-                  {stepsArr.map((step: string, index: number) => {
+                  {stepsArr.data.map((step: any, index: number) => {
                     return (
                       <p key={index}>
                         <span className='font-semibold'>{index + 1}.</span>{' '}
