@@ -11,11 +11,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-import {
-  Popover,
-  PopoverContent,
-  PopoverTrigger,
-} from '@/components/ui/popover';
+
 import ExerciseTab from '@/components/ui/exercises-tab/exercise-tab';
 
 import { useEffect, useState } from 'react';
@@ -323,17 +319,6 @@ export default function StudyPage() {
               />
             );
           })}
-      </div>
-      <div className='fixed right-10 top-10'>
-        <Popover>
-          <PopoverTrigger className='bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 rounded-md'>
-            Math
-          </PopoverTrigger>
-
-          <PopoverContent>
-            <Keyboard onKeyPress={(key) => setText(text + key)} />
-          </PopoverContent>
-        </Popover>
       </div>
     </main>
   );

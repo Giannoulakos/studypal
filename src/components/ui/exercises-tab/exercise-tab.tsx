@@ -6,6 +6,12 @@ import {
   AccordionItem,
   AccordionTrigger,
 } from '@/components/ui/accordion';
+import {
+  Popover,
+  PopoverContent,
+  PopoverTrigger,
+} from '@/components/ui/popover';
+import Keyboard from '@/components/ui/mathkeyboard/keyboard';
 import { Button } from '../button';
 import { Loader2 } from 'lucide-react';
 import { Textarea } from '../textarea';
@@ -52,6 +58,17 @@ const ExerciseTab: React.FC<ExerciseTabProps> = ({
             {exercise.exercise_name}
           </AccordionTrigger>
           <AccordionContent className=' p-2'>
+            <div className='flex justify-end'>
+              <Popover>
+                <PopoverTrigger className='bg-primary text-primary-foreground shadow hover:bg-primary/90 h-9 px-4 py-2 rounded-md'>
+                  Math
+                </PopoverTrigger>
+
+                <PopoverContent>
+                  <Keyboard onKeyPress={(key) => setText(text + key)} />
+                </PopoverContent>
+              </Popover>
+            </div>
             <div className='grid grid-cols-1 gap-y-4'>
               <div>
                 <p className='font-semibold text-lg'>
