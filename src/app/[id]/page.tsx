@@ -11,7 +11,7 @@ import {
   PaginationNext,
   PaginationPrevious,
 } from '@/components/ui/pagination';
-
+import { Progress } from '@/components/ui/progress';
 import ExerciseTab from '@/components/ui/exercises-tab/exercise-tab';
 
 import { useEffect, useState } from 'react';
@@ -19,7 +19,6 @@ import { Document, Page } from 'react-pdf';
 import 'react-pdf/dist/Page/AnnotationLayer.css';
 import 'react-pdf/dist/Page/TextLayer.css';
 import { pdfjs } from 'react-pdf';
-import Keyboard from '@/components/ui/mathkeyboard/keyboard';
 import { createClient } from '../../../utils/supabase/client';
 import { useAppContext } from '@/context';
 import dummyData from '@/dummy-data/pdf-example.json';
@@ -36,7 +35,8 @@ export default function StudyPage() {
   const [numPagesArr, setNumPagesArr] = useState<number[]>([0]);
   const [pageNumber, setPageNumber] = useState<number>(0);
 
-  const [text, setText] = useState<string>('');
+  const [progress, setProgress] = useState<number | null>(null);
+  const [progressText, setProgressText] = useState<string>('Loading...');
   const { userPrompt, setSendLoading, setHintLoading, setStepsLoading } =
     useAppContext();
 
@@ -63,6 +63,8 @@ export default function StudyPage() {
   }
 
   const handlePDF = async (content: string) => {
+    setProgressText('AI is thinking, this may take a while...');
+    setProgress(50);
     const {
       data: { user },
     } = await supabase.auth.getUser();
@@ -80,6 +82,8 @@ export default function StudyPage() {
             message: content,
           }),
         });
+        setProgressText('Tiding things up...');
+        setProgress(60);
         const data = await res.json();
         const finalData = JSON.parse(data.content);
         console.log('OpenAi response', finalData);
@@ -89,10 +93,13 @@ export default function StudyPage() {
       console.error(error);
       alert('Error handling PDF');
     }
+    setProgress(100);
   };
 
   const getPageContent = async (pageNumber: number) => {
     if (doc) {
+      setProgressText('Extracting text from PDF...');
+      setProgress(20);
       const fileReader = new FileReader();
       fileReader.onload = async function () {
         const typedArray = new Uint8Array(this.result as ArrayBuffer);
@@ -109,6 +116,7 @@ export default function StudyPage() {
           .join(' ');
         const textContent = pageText + '\n\n';
         console.log(textContent);
+        setProgress(40);
         await handlePDF(textContent);
       };
 
@@ -240,8 +248,8 @@ export default function StudyPage() {
     handleUserPrompt(userPrompt);
   }, [userPrompt]);
   useEffect(() => {
-    console.log(dummyData.exercises);
-    setExerciseData(dummyData.exercises);
+    // console.log(dummyData.exercises);
+    // setExerciseData(dummyData.exercises);
   }, []);
 
   return (
@@ -304,21 +312,29 @@ export default function StudyPage() {
         )}
       </div>
       <div className='flex flex-col items-center  min-w-[25vw] basis-1/2 p-10  bg-[whitesmoke]'>
-        {exerciseData &&
-          exerciseData.map((exercise: any, index: number) => {
-            return (
-              <ExerciseTab
-                exercise={exercise}
-                hintArr={hint}
-                aiChat={aiChat}
-                stepsArr={stepsArr}
-                onSteps={handleSteps}
-                onExerciseFocus={setLastFocusedExercise}
-                onHint={handleHint}
-                key={index}
-              />
-            );
-          })}
+        {exerciseData
+          ? exerciseData.map((exercise: any, index: number) => {
+              return (
+                <ExerciseTab
+                  exercise={exercise}
+                  hintArr={hint}
+                  aiChat={aiChat}
+                  stepsArr={stepsArr}
+                  onSteps={handleSteps}
+                  onExerciseFocus={setLastFocusedExercise}
+                  onHint={handleHint}
+                  key={index}
+                />
+              );
+            })
+          : progress !== null && (
+              <div className='flex flex-col justify-center w-full items-center h-[90vh]'>
+                <Progress className='h-[2vh]' value={progress} />
+                <div className='mt-10 font-semibold text-2xl'>
+                  {progressText}
+                </div>
+              </div>
+            )}
       </div>
     </main>
   );
