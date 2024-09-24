@@ -12,6 +12,7 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
   const [sendLoading, setSendLoading] = useState<boolean>(false);
   const [hintLoading, setHintLoading] = useState<boolean>(false);
   const [stepsLoading, setStepsLoading] = useState<boolean>(false);
+  const [videoLoading, setVideoLoading] = useState<boolean>(false);
 
   return (
     <AppContext.Provider
@@ -24,6 +25,8 @@ export function AppWrapper({ children }: { children: React.ReactNode }) {
         setHintLoading,
         stepsLoading,
         setStepsLoading,
+        videoLoading,
+        setVideoLoading,
       }}
     >
       {children}

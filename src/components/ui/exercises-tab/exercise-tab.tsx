@@ -18,15 +18,18 @@ import { Textarea } from '../textarea';
 import { useState } from 'react';
 import { Assistant } from '../assistant/assistant';
 import { useAppContext } from '@/context';
+import { on } from 'events';
 
 interface ExerciseTabProps {
   exercise: any;
   hintArr: any;
   aiChat: any;
   stepsArr: any;
+  videoArr: any;
   onExerciseFocus: any;
   onHint: any;
   onSteps: any;
+  onVideoGeneration: any;
 }
 
 const ExerciseTab: React.FC<ExerciseTabProps> = ({
@@ -37,11 +40,13 @@ const ExerciseTab: React.FC<ExerciseTabProps> = ({
   onExerciseFocus,
   onHint,
   onSteps,
+  onVideoGeneration,
+  videoArr,
 }) => {
   const [text, setText] = useState<string>('');
   const [userIsWriting, setUserIsWriting] = useState<boolean>(false);
 
-  const { stepsLoading } = useAppContext();
+  const { stepsLoading, videoLoading } = useAppContext();
   return (
     <>
       <Accordion
@@ -114,7 +119,20 @@ const ExerciseTab: React.FC<ExerciseTabProps> = ({
                     );
                   }
                 })}
-              <div>
+              <div className='flex gap-x-2 mt-5'>
+                {videoLoading ? (
+                  <Button disabled>
+                    <Loader2 className='mr-2 h-4 w-4 animate-spin' />
+                    Please wait
+                  </Button>
+                ) : (
+                  <Button
+                    onClick={onVideoGeneration}
+                    className='hover:bg-green-400 bg-green-500 font-semibold'
+                  >
+                    Generate Video Explanation
+                  </Button>
+                )}
                 {stepsLoading ? (
                   <Button disabled>
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />
@@ -129,6 +147,22 @@ const ExerciseTab: React.FC<ExerciseTabProps> = ({
                   </Button>
                 )}
               </div>
+              {videoArr.length > 0 &&
+                videoArr.map((video: any, index: number) => {
+                  if (video.name == exercise.exercise_name) {
+                    return (
+                      <div key={index}>
+                        <video
+                          src={video.data}
+                          controls
+                          className='rounded-md mt-10'
+                        >
+                          Your browser does not support the video tag.
+                        </video>
+                      </div>
+                    );
+                  }
+                })}
             </div>
             <br />
             <Textarea

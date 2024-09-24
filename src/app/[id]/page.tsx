@@ -22,6 +22,7 @@ import { pdfjs } from 'react-pdf';
 import { createClient } from '../../../utils/supabase/client';
 import { useAppContext } from '@/context';
 import dummyData from '@/dummy-data/pdf-example.json';
+import { Button } from '@/components/ui/button';
 
 // Error comes from pdfjs. When you find time fix it.
 pdfjs.GlobalWorkerOptions.workerSrc = new URL(
@@ -37,8 +38,13 @@ export default function StudyPage() {
 
   const [progress, setProgress] = useState<number | null>(null);
   const [progressText, setProgressText] = useState<string>('Loading...');
-  const { userPrompt, setSendLoading, setHintLoading, setStepsLoading } =
-    useAppContext();
+  const {
+    userPrompt,
+    setSendLoading,
+    setHintLoading,
+    setStepsLoading,
+    setVideoLoading,
+  } = useAppContext();
 
   const [exerciseData, setExerciseData] = useState<any>(null);
   const [lastFocusedExercise, setLastFocusedExercise] = useState<any>(null);
@@ -50,6 +56,7 @@ export default function StudyPage() {
   const [hint, setHint] = useState<ArrObj[]>([]);
   const [aiChat, setAiChat] = useState<ArrObj[]>([]);
   const [stepsArr, setStepsArr] = useState<ArrObj[]>([]);
+  const [videoArr, setVideoArr] = useState<ArrObj[]>([]);
 
   const supabase = createClient();
 
@@ -85,15 +92,22 @@ export default function StudyPage() {
         setProgressText('Tiding things up...');
         setProgress(60);
         const data = await res.json();
-        const finalData = JSON.parse(data.content);
-        console.log('OpenAi response', finalData);
-        setExerciseData(finalData.exercises);
+        const jsonData = JSON.parse(data.content);
+        console.log('OpenAi response', jsonData);
+        if (exerciseData === null) {
+          setExerciseData(jsonData.exercises);
+        } else {
+          let finalData = exerciseData;
+          finalData.push(...jsonData.exercises);
+          setExerciseData(finalData);
+        }
       }
     } catch (error) {
       console.error(error);
       alert('Error handling PDF');
     }
     setProgress(100);
+    setProgress(null);
   };
 
   const getPageContent = async (pageNumber: number) => {
@@ -239,17 +253,142 @@ export default function StudyPage() {
     setStepsLoading(false);
   };
 
+  const handleVideoGeneration = async () => {
+    setVideoLoading(true);
+    if (lastFocusedExercise) {
+      try {
+        const res = await fetch('/api/text-generation', {
+          method: 'POST',
+          headers: {
+            'Content-Type': 'application/json',
+          },
+          body: JSON.stringify({
+            request: 'video',
+            message: lastFocusedExercise.question,
+          }),
+        });
+        const data = await res.json();
+        console.log('OpenAi response', data);
+
+        if (data) {
+          const shotstackRes = await fetch(
+            'https://api.shotstack.io/edit/v1/render',
+            {
+              method: 'POST',
+              headers: {
+                'Content-Type': 'application/json',
+                Accept: 'application/json',
+                'x-api-key': process.env.NEXT_PUBLIC_SHOTSTACK_API_KEY!,
+              },
+              body: JSON.stringify({
+                timeline: {
+                  tracks: [
+                    {
+                      clips: [
+                        {
+                          asset: {
+                            type: 'caption',
+                            src: 'alias://voiceover',
+                            font: {
+                              color: '#ffffff',
+                              family: 'Montserrat ExtraBold',
+                              size: 30,
+                              lineHeight: 0.8,
+                            },
+                            margin: {
+                              top: 0.25,
+                            },
+                          },
+                          start: 0,
+                          length: 'end',
+                        },
+                      ],
+                    },
+                    {
+                      clips: [
+                        {
+                          alias: 'voiceover',
+                          asset: {
+                            type: 'text-to-speech',
+                            text: data.content,
+                            voice: 'Joanna',
+                          },
+                          start: 0,
+                          length: 'auto',
+                        },
+                      ],
+                    },
+                  ],
+                },
+                output: {
+                  format: 'mp4',
+                  size: {
+                    width: 1280,
+                    height: 720,
+                  },
+                },
+              }),
+            }
+          );
+          const renderRes = await shotstackRes.json();
+          console.log('Shotstack response', renderRes);
+          if (renderRes.success === true) {
+            const sleep = (milliseconds: number) => {
+              return new Promise((resolve) =>
+                setTimeout(resolve, milliseconds)
+              );
+            };
+            let flag = false;
+            await sleep(5000);
+            do {
+              await sleep(10000);
+              const response = await fetch(
+                '  https://api.shotstack.io/edit/v1/render/' +
+                  renderRes.response.id,
+                {
+                  method: 'GET',
+                  headers: {
+                    Accept: 'application/json',
+                    'Content-Type': 'application/json',
+                    'x-api-key': process.env.NEXT_PUBLIC_SHOTSTACK_API_KEY!,
+                  },
+                }
+              );
+              const json = await response.json();
+              console.log('Shotstack response', json);
+              if (json.response.url) {
+                flag = true;
+                setVideoArr((prevVideoArr: any[]) => [
+                  ...prevVideoArr,
+                  {
+                    data: json.response.url,
+                    name: lastFocusedExercise.exercise_name,
+                  },
+                ]);
+              }
+            } while (!flag);
+          }
+        }
+      } catch (error) {
+        console.error(error);
+        alert('Error handling video generation');
+      }
+    }
+    setVideoLoading(false);
+  };
+
   useEffect(() => {
     getPageContent(1);
     console.log(exerciseData);
   }, [doc]);
+
   useEffect(() => {
     if (userPrompt === '' || !lastFocusedExercise) return;
     handleUserPrompt(userPrompt);
   }, [userPrompt]);
   useEffect(() => {
     // console.log(dummyData.exercises);
-    // setExerciseData(dummyData.exercises);
+    setExerciseData(dummyData.exercises);
   }, []);
 
   return (
@@ -262,6 +401,14 @@ export default function StudyPage() {
               console.log(file);
             }}
           />
+          {pageNumber > 0 && (
+            <Button
+              className='hover:bg-green-400 bg-green-500 font-semibold'
+              onClick={() => getPageContent(pageNumber)}
+            >
+              Get Page {pageNumber}
+            </Button>
+          )}
         </div>
         <Pagination>
           <PaginationContent>
@@ -312,7 +459,7 @@ export default function StudyPage() {
         )}
       </div>
       <div className='flex flex-col items-center  min-w-[25vw] basis-1/2 p-10  bg-[whitesmoke]'>
-        {exerciseData
+        {exerciseData && progress === null
           ? exerciseData.map((exercise: any, index: number) => {
               return (
                 <ExerciseTab
@@ -324,6 +471,8 @@ export default function StudyPage() {
                   onExerciseFocus={setLastFocusedExercise}
                   onHint={handleHint}
                   key={index}
+                  onVideoGeneration={handleVideoGeneration}
+                  videoArr={videoArr}
                 />
               );
             })

@@ -81,6 +81,21 @@ export async function POST(request: Request, context: any) {
         });
         console.log(completion.choices[0]);
         return NextResponse.json(completion.choices[0].message.content);
+      } else if (data.request == 'video') {
+        const completion = await openai.chat.completions.create({
+          messages: [
+            {
+              role: 'system',
+              content:
+                'Create english text suitable for a video explanation of the following exercise. Make sure the text includes all the information required for the student to adequately solve the exercise without giving away the answer.',
+            },
+            { role: 'user', content: data.message },
+          ],
+          model: 'gpt-4o-mini',
+          response_format: { type: 'text' },
+        });
+        console.log(completion.choices[0]);
+        return NextResponse.json(completion.choices[0].message);
       }
     } catch (error) {
       console.error(error);
