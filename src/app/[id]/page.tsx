@@ -255,124 +255,22 @@ export default function StudyPage() {
 
   const handleVideoGeneration = async () => {
     setVideoLoading(true);
-    if (lastFocusedExercise) {
-      try {
-        const res = await fetch('/api/text-generation', {
-          method: 'POST',
-          headers: {
-            'Content-Type': 'application/json',
-          },
-          body: JSON.stringify({
-            request: 'video',
-            message: lastFocusedExercise.question,
-          }),
-        });
-        const data = await res.json();
-        console.log('OpenAi response', data);
-
-        if (data) {
-          const shotstackRes = await fetch(
-            'https://api.shotstack.io/edit/v1/render',
-            {
-              method: 'POST',
-              headers: {
-                'Content-Type': 'application/json',
-                Accept: 'application/json',
-                'x-api-key': process.env.NEXT_PUBLIC_SHOTSTACK_API_KEY!,
-              },
-              body: JSON.stringify({
-                timeline: {
-                  tracks: [
-                    {
-                      clips: [
-                        {
-                          asset: {
-                            type: 'caption',
-                            src: 'alias://voiceover',
-                            font: {
-                              color: '#ffffff',
-                              family: 'Montserrat ExtraBold',
-                              size: 30,
-                              lineHeight: 0.8,
-                            },
-                            margin: {
-                              top: 0.25,
-                            },
-                          },
-                          start: 0,
-                          length: 'end',
-                        },
-                      ],
-                    },
-                    {
-                      clips: [
-                        {
-                          alias: 'voiceover',
-                          asset: {
-                            type: 'text-to-speech',
-                            text: data.content,
-                            voice: 'Joanna',
-                          },
-                          start: 0,
-                          length: 'auto',
-                        },
-                      ],
-                    },
-                  ],
-                },
-                output: {
-                  format: 'mp4',
-                  size: {
-                    width: 1280,
-                    height: 720,
-                  },
-                },
-              }),
-            }
-          );
-          const renderRes = await shotstackRes.json();
-          console.log('Shotstack response', renderRes);
-          if (renderRes.success === true) {
-            const sleep = (milliseconds: number) => {
-              return new Promise((resolve) =>
-                setTimeout(resolve, milliseconds)
-              );
-            };
-            let flag = false;
-            await sleep(5000);
-            do {
-              await sleep(10000);
-              const response = await fetch(
-                '  https://api.shotstack.io/edit/v1/render/' +
-                  renderRes.response.id,
-                {
-                  method: 'GET',
-                  headers: {
-                    Accept: 'application/json',
-                    'Content-Type': 'application/json',
-                    'x-api-key': process.env.NEXT_PUBLIC_SHOTSTACK_API_KEY!,
-                  },
-                }
-              );
-              const json = await response.json();
-              console.log('Shotstack response', json);
-              if (json.response.url) {
-                flag = true;
-                setVideoArr((prevVideoArr: any[]) => [
-                  ...prevVideoArr,
-                  {
-                    data: json.response.url,
-                    name: lastFocusedExercise.exercise_name,
-                  },
-                ]);
-              }
-            } while (!flag);
-          }
-        }
-      } catch (error) {
-        console.error(error);
-        alert('Error handling video generation');
-      }
+    const res = await fetch('/api/video-generation', {
+      method: 'POST',
+      headers: {
+        'Content-Type': 'application/json',
+      },
+      body: JSON.stringify({
+        lastFocusedExercise,
+      }),
+    });
+    const data = await res.json();
+    console.log('shotstack response', data);
+    if (data) {
+      setVideoArr((prevVideoArr: any[]) => [
+        ...prevVideoArr,
+        { data: data.data, name: data.name },
+      ]);
     }
     setVideoLoading(false);
   };

@@ -13,7 +13,7 @@ export async function POST(request: Request, context: any) {
     request: 'initial' | 'hint' | 'user_prompt' | 'steps';
   };
   const data: Data = await request.json();
-  if (data.message && user) {
+  if (data.message) {
     try {
       if (data.request === 'initial') {
         const completion = await openai.chat.completions.create({

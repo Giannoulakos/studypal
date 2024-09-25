@@ -123,7 +123,7 @@ const ExerciseTab: React.FC<ExerciseTabProps> = ({
                 {videoLoading ? (
                   <Button disabled>
                     <Loader2 className='mr-2 h-4 w-4 animate-spin' />
-                    Please wait
+                    This may take a while... Please wait
                   </Button>
                 ) : (
                   <Button
