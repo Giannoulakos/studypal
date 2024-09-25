@@ -8,6 +8,17 @@ import { Suspense, useEffect, useState } from 'react';
 import { useSearchParams } from 'next/navigation';
 import { Input } from '@/components/ui/input';
 
+import {
+  Card,
+  CardContent,
+  CardDescription,
+  CardFooter,
+  CardHeader,
+  CardTitle,
+} from '@/components/ui/card';
+
+import { Label } from '@/components/ui/label';
+
 export default function Login() {
   const router = useRouter();
 
@@ -39,7 +50,14 @@ export default function Login() {
       }
     }, [searchParams]);
 
-    return <Button formAction={action}>{text}</Button>;
+    return (
+      <Button
+        formAction={action}
+        className='hover:bg-green-400 bg-green-500 font-semibold w-full'
+      >
+        {text}
+      </Button>
+    );
   };
 
   const authenticate = async () => {
@@ -62,36 +80,38 @@ export default function Login() {
   }, []);
 
   return (
-    <main
-      className='flex justify-center items-center'
-      style={{ height: '100vh' }}
-    >
-      <div className='rounded shadow-md w-[90%] h-1/3 md:w-1/2 flex items-center p-4'>
-        <form className='mx-10 w-full'>
-          <Input type='email' name='email' placeholder='Enter your email' />
-          <br />
-          <Input
-            type='password'
-            name='password'
-            placeholder='Enter your password'
-          />
-          <br />
-
-          <div className='flex justify-between items-center w-44'>
-            <Suspense>
-              <SignUpComponent text='Sign In' action={login} />
-            </Suspense>
-            <Suspense>
-              <SignUpComponent text='Sign Up' action={signup} />
-            </Suspense>
+    <form className='flex justify-center items-center h-screen bg-green-50'>
+      <Card className='w-full max-w-sm'>
+        <CardHeader>
+          <CardTitle className='text-2xl'>Login</CardTitle>
+          <CardDescription>
+            Enter your email below to login to your account.
+          </CardDescription>
+        </CardHeader>
+        <CardContent className='grid gap-4'>
+          <div className='grid gap-2'>
+            <Label htmlFor='email'>Email</Label>
+            <Input
+              type='email'
+              placeholder='m@example.com'
+              name='email'
+              required
+            />
           </div>
-          <div className='mt-3 mb-3'>
-            <a href='/support/forgot-password'>
-              <u className=' text-blue-500'>Forgot Password?</u>
-            </a>
+          <div className='grid gap-2'>
+            <Label htmlFor='password'>Password</Label>
+            <Input type='password' name='password' required />
           </div>
-        </form>
-      </div>
-    </main>
+        </CardContent>
+        <CardFooter className='flex justify-between gap-x-10'>
+          <Suspense>
+            <SignUpComponent text='Sign In' action={login} />
+          </Suspense>
+          <Suspense>
+            <SignUpComponent text='Sign Up' action={signup} />
+          </Suspense>
+        </CardFooter>
+      </Card>
+    </form>
   );
 }
